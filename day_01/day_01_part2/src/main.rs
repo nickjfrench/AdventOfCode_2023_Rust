@@ -35,7 +35,6 @@ impl Number {
                 nums.push(num);
             }
         }
-
         nums
     }
 }
