@@ -28,7 +28,7 @@ fn part1(input: String) -> String {
 
         total += process_digit(first_num, last_num)
     }
-    
+
     total.to_string()
 }
 
@@ -59,7 +59,7 @@ pub fn part2(input: String) -> String {
 
         for (i, c) in line.chars().enumerate() {
             let mut number: Option<u32> = None;
-            
+
             if let Some(digit) = c.to_digit(10) {
                 // Check for number as digit
                 number = Some(digit)
