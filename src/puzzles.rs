@@ -1,9 +1,10 @@
 use std::fs;
 
 mod day1;
+mod day2;
 
 pub fn solve_puzzle(day: u32) {
-    let data = match get_data(1) {
+    let data = match get_data(day) {
         Ok(data) => data,
         Err(error) => panic!("{}", error),
     };
@@ -11,6 +12,7 @@ pub fn solve_puzzle(day: u32) {
     match day {
         // add each day as needed
         1 => day1::solve(data),
+        2 => day2::solve(data),
         _ => panic!("day{} does not exist yet.", &day)
     }
 }
