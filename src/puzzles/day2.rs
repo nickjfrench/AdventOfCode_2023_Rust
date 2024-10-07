@@ -11,12 +11,15 @@ fn part1(input: String) -> String{
 // Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 // Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 // Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+    
     let mut games: Vec<Game> = Vec::new();
-    for (i, line) in input.lines().enumerate(){
-        println!("\nParsing line {}:", i+1);
+    for line in input.lines(){
         games.push(Game::new(&line));
     }
-
+    println!("Games: {:#?}", games);
+    
+    
+    
     String::from("Not Implemented")
 }
 
@@ -43,41 +46,10 @@ impl Game {
 
         let game_id = Self::parse_game_id(line_split[0]);
 
-        let rounds_split: Vec<&str> = line_split[1].split(";").collect();
+        let rounds_data: Vec<&str> = line_split[1].split(";").collect();
 
-        let mut rounds: Vec<Round> = Vec::new();
+        let rounds: Vec<Round> = Self::parse_rounds(rounds_data);
         
-        for round_data in rounds_split {
-            let round_scores: Vec<&str> = round_data.split(",").collect();
-            
-            let mut round: Round = Round {
-                red: 0,
-                green: 0,
-                blue: 0,
-            };
-            
-            for score in round_scores {
-                let score = score.trim();
-                
-                let score_split:Vec<&str> = score.split(" ").collect();
-                
-                let digit: u32 = match score_split[0].parse() {
-                    Ok(n) => n,
-                    Err(_) => panic!("Error parsing score digit: {:?}", score_split),
-                };
-                
-                match score_split[1] {
-                    "red" => round.red = digit,
-                    "green" => round.green = digit,
-                    "blue" => round.blue = digit,
-                    _ => panic!("Unknown score entry: {:?}", score_split[1]),
-                }
-            }
-            
-            rounds.push(round);
-        }
-        
-        println!("Game: {:?}\nRounds: {:#?}", game_id, rounds);
         Self { id: game_id, rounds }
     }
 
@@ -88,6 +60,42 @@ impl Game {
             Ok(id) => id,
             Err(_) => panic!("Failed to parse game id: {}", id_str),
         }
+    }
+    
+    fn parse_rounds(rounds_data: Vec<&str>) -> Vec<Round>{
+        let mut rounds: Vec<Round> = Vec::new();
+        
+        for round_data in rounds_data {
+            let round_scores: Vec<&str> = round_data.split(",").collect();
+
+            let mut round: Round = Round {
+                red: 0,
+                green: 0,
+                blue: 0,
+            };
+
+            for score in round_scores {
+                let score = score.trim();
+
+                let score_split:Vec<&str> = score.split(" ").collect();
+
+                let digit: u32 = match score_split[0].parse() {
+                    Ok(n) => n,
+                    Err(_) => panic!("Error parsing score digit: {:?}", score_split),
+                };
+
+                match score_split[1] {
+                    "red" => round.red = digit,
+                    "green" => round.green = digit,
+                    "blue" => round.blue = digit,
+                    _ => panic!("Unknown score entry: {:?}", score_split[1]),
+                }
+            }
+
+            rounds.push(round);
+        }
+        
+        rounds
     }
 }
 
