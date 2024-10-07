@@ -2,44 +2,61 @@
 pub fn solve(input: String) {
     println!("-- Day 2 --");
     println!("Part 1: {}", part1(input.clone()));
-    println!("Part 2: {}", "Not Implemented");
+    println!("Part 2: {}", part2(input.clone()));
 }
 
 fn part1(input: String) -> String{
-//     let input = "Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
-// Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
-// Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
-// Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
-// Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
-
-    let bag: Round = Round {
+    let bag: BagSet = BagSet {
         red: 12,
         green: 13,
         blue: 14,
     };
-    
-    let mut games: Vec<Game> = Vec::new();
-    for line in input.lines(){
-        games.push(Game::new(&line));
-    }
-    println!("Games: {:#?}", games);
-    
+
+    let games: Vec<Game> = parse_games(&input);
+
     let mut games_possible: Vec<Game> = Vec::new();
     let mut total: u32 = 0;
-    
+
     for game in games {
-        if game.is_possible(&bag) {
+        if game.possible_with_bag(&bag) {
             total += game.id;
             games_possible.push(game);
         }
     }
-    
-    
+
     format!("{}", total)
 }
 
+fn part2(input: String) -> String{
+    let games = parse_games(&input);
+
+    let mut sum: u32 = 0;
+
+    for game in games {
+        let bag = game.minimum_bag_possible();
+        sum += calculate_power(&bag);
+    }
+
+    format!("{}", sum)
+}
+
+fn parse_games(input: &str) -> Vec<Game> {
+    let mut games: Vec<Game> = Vec::new();
+
+    for line in input.lines(){
+        games.push(Game::new(&line));
+    }
+    // println!("Games: {:#?}", games);
+
+    games
+}
+
+fn calculate_power(bag_set: &BagSet) -> u32 {
+    bag_set.red.max(1) * bag_set.green.max(1) * bag_set.blue.max(1)
+}
+
 #[derive(Debug)]
-struct Round {
+struct BagSet {
     red: u32,
     green: u32,
     blue: u32,
@@ -48,7 +65,7 @@ struct Round {
 #[derive(Debug)]
 struct Game {
     id: u32,
-    rounds: Vec<Round>,
+    rounds: Vec<BagSet>,
 }
 
 impl Game {
@@ -63,8 +80,8 @@ impl Game {
 
         let rounds_data: Vec<&str> = line_split[1].split(";").collect();
 
-        let rounds: Vec<Round> = Self::parse_rounds(rounds_data);
-        
+        let rounds: Vec<BagSet> = Self::parse_rounds(rounds_data);
+
         Self { id: game_id, rounds }
     }
 
@@ -76,14 +93,14 @@ impl Game {
             Err(_) => panic!("Failed to parse game id: {}", id_str),
         }
     }
-    
-    fn parse_rounds(rounds_data: Vec<&str>) -> Vec<Round>{
-        let mut rounds: Vec<Round> = Vec::new();
-        
+
+    fn parse_rounds(rounds_data: Vec<&str>) -> Vec<BagSet>{
+        let mut rounds: Vec<BagSet> = Vec::new();
+
         for round_data in rounds_data {
             let round_scores: Vec<&str> = round_data.split(",").collect();
 
-            let mut round: Round = Round {
+            let mut round: BagSet = BagSet {
                 red: 0,
                 green: 0,
                 blue: 0,
@@ -109,20 +126,42 @@ impl Game {
 
             rounds.push(round);
         }
-        
+
         rounds
     }
-    
-    fn is_possible(&self, bag: &Round) -> bool{
+
+    fn possible_with_bag(&self, bag: &BagSet) -> bool{
         let mut is_possible = true;
-        
+
         for round in &self.rounds {
             if bag.red < round.red || bag.green < round.green || bag.blue < round.blue {
                 is_possible = false;
             }
         }
-        
+
         is_possible
+    }
+
+    fn minimum_bag_possible(&self) -> BagSet {
+        let mut minimum_bag = BagSet {
+            red: 0,
+            green: 0,
+            blue: 0,
+        };
+
+        for round in &self.rounds {
+            if round.red > minimum_bag.red {
+                minimum_bag.red = round.red;
+            }
+            if round.green > minimum_bag.green {
+                minimum_bag.green = round.green;
+            }
+            if round.blue > minimum_bag.blue {
+                minimum_bag.blue = round.blue;
+            }
+        }
+
+        minimum_bag
     }
 }
 
