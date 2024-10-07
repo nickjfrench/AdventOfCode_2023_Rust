@@ -11,6 +11,12 @@ fn part1(input: String) -> String{
 // Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 // Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
 // Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
+
+    let bag: Round = Round {
+        red: 12,
+        green: 13,
+        blue: 14,
+    };
     
     let mut games: Vec<Game> = Vec::new();
     for line in input.lines(){
@@ -18,9 +24,18 @@ fn part1(input: String) -> String{
     }
     println!("Games: {:#?}", games);
     
+    let mut games_possible: Vec<Game> = Vec::new();
+    let mut total: u32 = 0;
+    
+    for game in games {
+        if game.is_possible(&bag) {
+            total += game.id;
+            games_possible.push(game);
+        }
+    }
     
     
-    String::from("Not Implemented")
+    format!("{}", total)
 }
 
 #[derive(Debug)]
@@ -96,6 +111,18 @@ impl Game {
         }
         
         rounds
+    }
+    
+    fn is_possible(&self, bag: &Round) -> bool{
+        let mut is_possible = true;
+        
+        for round in &self.rounds {
+            if bag.red < round.red || bag.green < round.green || bag.blue < round.blue {
+                is_possible = false;
+            }
+        }
+        
+        is_possible
     }
 }
 
