@@ -9,39 +9,34 @@ pub fn solve(input: String) {
 }
 
 fn part1(input: String) -> String {
-//     let input = String::from("467..114..
-// ...*......
-// ..35..633.
-// ......#...
-// 617*......
-// .....+.58.
-// ..592.....
-// ......755.
-// ...$.*....
-// .664.598..");
-
     check_declared_symbols(&input);
     let puzzle_grid = parse_puzzle(input);
 
     let mut sum:u32 = 0;
 
-    for x in 0..puzzle_grid.grid.len() {
-        let mut digit = String::new();
+    let is_symbol_or_blank = |cell: char| cell == BLANK_SYMBOL || SYMBOLS.contains(&cell);
 
-        // Used to track Has Adjacent Symbol
-        let mut adjacent_symbol = false;
+    let process_digit = |digit: &String, adjacent_symbol: bool, sum: &mut u32| {
+        if !digit.is_empty() && adjacent_symbol {
+            *sum += parse_digit(digit);
+        }
+    };
+    
+    let reset_digit = |digit: &mut String, adjacent_symbol: &mut bool| {
+        digit.clear();
+        *adjacent_symbol = false;
+    };
 
-        for y in 0..puzzle_grid.grid[x].len() {
-            let cell = puzzle_grid.grid[x][y];
+    let mut digit = String::new();
+    // Used to track Has Adjacent Symbol
+    let mut adjacent_symbol = false;
+
+    for (x, row) in puzzle_grid.grid.iter().enumerate() {
+        for (y, &cell) in row.iter().enumerate() {
             // If '.' or a SYMBOL process digit and skip iteration.
-            if cell == BLANK_SYMBOL || SYMBOLS.iter().any(|&symbol| symbol == cell) {
-                if !digit.is_empty() && adjacent_symbol {
-                    sum += parse_digit(&digit);
-                }
-
-                digit = String::new();
-                adjacent_symbol = false;
-
+            if is_symbol_or_blank(cell) {
+                process_digit(&digit, adjacent_symbol, &mut sum);
+                reset_digit(&mut digit, &mut adjacent_symbol);
                 continue;
             }
 
@@ -53,9 +48,8 @@ fn part1(input: String) -> String {
             }
         }
 
-        if !digit.is_empty() && adjacent_symbol {
-            sum += parse_digit(&digit);
-        }
+        process_digit(&digit, adjacent_symbol, &mut sum);
+        reset_digit(&mut digit, &mut adjacent_symbol);
     }
 
     sum.to_string()
@@ -129,54 +123,28 @@ impl PuzzleGrid {
     }
 
     pub fn has_adjacent_symbol(&self, x: usize, y: usize) -> bool {
-        let above = if x != 0 {
-            SYMBOLS.iter().any(|&symbol| symbol == self.grid[x-1][y])
-        } else {
-            false
+        // Convert to isize to prevent overflow errors on negative values.
+        let x = x as isize;
+        let y = y as isize;
+
+        // Helper function to check if a symbol exists at a specific position
+        let is_symbol_at = |x: isize, y: isize| {
+            // Bounds Checking
+            if x >= 0 && x < self.grid.len() as isize && y >= 0 && y < self.grid[x as usize].len() as isize {
+                SYMBOLS.iter().any(|&symbol| symbol == self.grid[x as usize][y as usize])
+            } else {
+                false
+            }
         };
 
-        let below = if x != self.grid.len()-1 {
-            SYMBOLS.iter().any(|&symbol| symbol == self.grid[x+1][y])
-        } else {
-            false
-        };
-
-        let left = if y != 0 {
-            SYMBOLS.iter().any(|&symbol| symbol == self.grid[x][y-1])
-        } else {
-            false
-        };
-
-        let right = if y != self.grid[x].len()-1 {
-            SYMBOLS.iter().any(|&symbol| symbol == self.grid[x][y+1])
-        } else {
-            false
-        };
-
-        let top_left = if x != 0 && y != 0 {
-            SYMBOLS.iter().any(|&symbol| symbol == self.grid[x-1][y-1])
-        } else {
-            false
-        };
-
-        let top_right = if x != 0 && y != self.grid[x].len()-1  {
-            SYMBOLS.iter().any(|&symbol| symbol == self.grid[x-1][y+1])
-        } else {
-            false
-        };
-
-        let bottom_left = if y != 0 && x != self.grid.len()-1 {
-            SYMBOLS.iter().any(|&symbol| symbol == self.grid[x+1][y-1])
-        } else {
-            false
-        };
-
-        let bottom_right = if y != self.grid[x].len()-1 && x != self.grid.len()-1 {
-            SYMBOLS.iter().any(|&symbol| symbol == self.grid[x+1][y+1])
-        } else {
-            false
-        };
-
-        above || below || left || right || top_left || top_right || bottom_left || bottom_right
+        // Check all 8 possible directions
+        is_symbol_at(x - 1, y)     || // above
+        is_symbol_at(x + 1, y)     || // below
+        is_symbol_at(x, y - 1)     || // left
+        is_symbol_at(x, y + 1)     || // right
+        is_symbol_at(x - 1, y - 1) || // top-left
+        is_symbol_at(x - 1, y + 1) || // top-right
+        is_symbol_at(x + 1, y - 1) || // bottom-left
+        is_symbol_at(x + 1, y + 1)    // bottom-right
     }
 }
